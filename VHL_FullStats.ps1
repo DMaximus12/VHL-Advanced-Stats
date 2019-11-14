@@ -23,6 +23,7 @@
         None
 
     .NOTES
+        This script creates two files on the local drive. in the C:\Temp directory.
         This is a work in progress. Please do not bug me if it's not working.
 
  #>
@@ -740,6 +741,11 @@ Write-Output "$VisitorTeamName Advance Metrics `nCorsi For: $vteamCF `t`tCorsi A
 Write-Output "$HomeTeamName Advance Metrics `nCorsi For: $hteamCF `t`tCorsi Against: $hteamCA `t`tCorsi: $hteamCorsi `t`t`tCorsi For %: $hteamCFPct `nFenwick For: $hteamFF `tFenwick Against: $hteamFA `tFenwick: $hteamFenwick `t`tFenwick For %: $hteamFFPct `nPDO: $hteamPDO`n"
 
 # should do some cleanup here to delete the temp files I created
+Read-Host -Prompt "Script Complete Press any key to exit"
+
+Remove-Item -Path C:\Temp\VHLGame.txt -Force
+Remove-Item -Path C:\Temp\VHLGamewLines.txt -Force
+
 
 <#
 
