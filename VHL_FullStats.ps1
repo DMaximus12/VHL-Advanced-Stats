@@ -7,9 +7,8 @@
         and outputs a table with individual stats and team summary stats of advanced metrics (Corsi, Fenwick, and PDO).
 
     .PARAMETER FirstParameter
-        While the script currently does not allow command line paramaters, the url can be pasted in the script at the $baseurl variable.
-        Updating the $baseurl variable is how you get this script to run on different games
-        
+        The paramater is the url of the full play-by-play. If not entered on the command line, the user will be prompted to enter the full URL.
+       
     .INPUTS
         currently nothing is an input, future release will allow URL to be entered in command line
 
@@ -27,8 +26,17 @@
         This is a work in progress. Please do not bug me if it's not working.
 
  #>
+
+param ($baseurl)
+While ($baseurl -eq $null) {
+$baseurl = read-host -Prompt "Please enter the full play-by-play URL"
+if ($baseurl -notlike "https://vhlportal.com/VHL*") {
+write-host "The URL does not appear to be a full play-by-play URL." 
+$baseurl = $null
+ }
+}
  
-$baseurl = "https://vhlportal.com/VHL/68/Playoffs/VHL68-PLF-27.html"
+
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 try
