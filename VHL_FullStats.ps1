@@ -1,4 +1,33 @@
-﻿
+<#
+    .SYNOPSIS
+        Provides advanced statistics of a single VHL game.
+
+    .DESCRIPTION
+        This script runs through the full play-by-play page oh a VHL game (ex. https://vhlportal.com/VHL/68/VHL68-420.html)
+        and outputs a table with individual stats and team summary stats of advanced metrics (Corsi, Fenwick, and PDO).
+
+    .PARAMETER FirstParameter
+        While the script currently does not allow command line paramaters, the url can be pasted in the script at the $baseurl variable.
+        Updating the $baseurl variable is how you get this script to run on different games
+        
+    .INPUTS
+        currently nothing is an input, future release will allow URL to be entered in command line
+
+    .OUTPUTS
+        The individual stats table and advanced metrics sumamry are written to the default output (usually the screen)
+
+    .EXAMPLE
+        Go to the full play by play URL of a VHL game. Copy the URL. Paste that URL in the script as the $baseurl variable. Run script.
+        Copy results table to excel, modify data so it looks good, share with teammates.
+
+    .LINK
+        None
+
+    .NOTES
+        This is a work in progress. Please do not bug me if it's not working.
+
+ #>
+ 
 $baseurl = "https://vhlportal.com/VHL/68/Playoffs/VHL68-PLF-27.html"
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
