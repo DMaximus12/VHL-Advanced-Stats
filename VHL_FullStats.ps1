@@ -56,14 +56,14 @@ catch
 
 #Put webapge in a txt file so we can manipluate it easier
 $thetext = $gamepage.Content
-$thetext > "C:\Temp\VHLGame.txt"
+$thetext > "$env:temp\VHLGame.txt"
 
 #look through content and grab the full period summaries (will start with normal, powerplay, or penalty kill)
 #The entire full period summary is on one line. We need to split it to single lines to read better
 #Split on . to create a new line for each event, save that to another temp file.
 
 $lfpbp = $null
-$gamefromtext = gc C:\Temp\VHLGame.txt
+$gamefromtext = gc "$env:temp\VHLGame.txt"
 foreach ($line in $gamefromtext)
 {
 if ($line.StartsWith("Normal Lineup")){
@@ -82,7 +82,7 @@ elseif ($line.StartsWith("3 vs 3 Lineup"))
 
 }
 
-$lfpbp > "C:\Temp\VHLGamewLines.txt"
+$lfpbp > "$env:temp\VHLGamewLines.txt"
 
 
 $FailedPassCount = 0
@@ -94,7 +94,7 @@ $passersplitarray = $null
 $passername =$null
 $passHash=@{}
 
-$gamepbp = gc "C:\Temp\VHLGamewLines.txt"
+$gamepbp = gc "$env:temp\VHLGamewLines.txt"
 
 function Add-AdvanceStats([PSCustomObject]$currentobject){
 
@@ -741,10 +741,10 @@ Write-Output "$VisitorTeamName Advance Metrics `nCorsi For: $vteamCF `t`tCorsi A
 Write-Output "$HomeTeamName Advance Metrics `nCorsi For: $hteamCF `t`tCorsi Against: $hteamCA `t`tCorsi: $hteamCorsi `t`t`tCorsi For %: $hteamCFPct `nFenwick For: $hteamFF `tFenwick Against: $hteamFA `tFenwick: $hteamFenwick `t`tFenwick For %: $hteamFFPct `nPDO: $hteamPDO`n"
 
 # should do some cleanup here to delete the temp files I created
-Read-Host -Prompt "Script Complete Press any key to exit"
+Read-Host -Prompt "Script complete! Press ENTER to exit"
 
-Remove-Item -Path C:\Temp\VHLGame.txt -Force
-Remove-Item -Path C:\Temp\VHLGamewLines.txt -Force
+Remove-Item -Path $env:temp\VHLGame.txt -Force
+Remove-Item -Path $env:temp\VHLGamewLines.txt -Force
 
 
 <#
