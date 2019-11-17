@@ -10,13 +10,13 @@
         The paramater is the url of the full play-by-play. If not entered on the command line, the user will be prompted to enter the full URL.
        
     .INPUTS
-        currently nothing is an input, future release will allow URL to be entered in command line
+        URL of full play-by-play of VHL/M game.
 
     .OUTPUTS
         The individual stats table and advanced metrics sumamry are written to the default output (usually the screen)
 
     .EXAMPLE
-        Go to the full play by play URL of a VHL game. Copy the URL. Paste that URL in the script as the $baseurl variable. Run script.
+        Go to the full play by play URL of a VHL game. Copy the URL. Paste that URL when prompted by the script (or pass it as a baseurl variable int . Run script.
         Copy results table to excel, modify data so it looks good, share with teammates.
 
     .LINK
@@ -288,7 +288,7 @@ foreach ($action in $allActions){
             {$TACount++}
     }
 
-}
+  } # end foreach
 
 $totalPasses = ($MadePassCount + $FailedPassCount)
 if ($totalPasses -eq 0)
@@ -349,54 +349,112 @@ $rawHomeTeam = $srosters[3]
 
 $parseAwayTeam = $rawAwayTeam -split ([Environment]::NewLine)
 
+
+#let's get goalie information!!!
+
+$rawgoalers = $gamepage.AllElements | Where Class -eq "STHSGame_GoalerStats" | Select -ExpandProperty innerText
+$indvgoalers = $rawgoalers -split ([Environment]::NewLine)
+#not going to be this simple because we need to handle cases for goalies getting pulled
+$awaygoaler = $indvgoalers[0]
+$homegoaler = $indvgoalers[1]
+
+ 
+$tempawaygoalername = $awaygoaler -split "\("
+$awaygoalername = $tempawaygoalername[0].trim()
+
+$awaygoalertempstats1 = $tempawaygoalername[1] -split " "
+$awaygoalertempstats2 = $tempawaygoalername[2] -split " "
+$awaygoalersaves = $awaygoalertempstats1[1]
+$awaygoalershotsagainst = $awaygoalertempstats1[4]
+$awaygoalersvpct = $awaygoalertempstats2[0].substring(0,5)
+$awaygoalerminutesplayed = $awaygoalertempstats2[3]
+
+$awaygoaliestatobject = [PSCustomObject]@{
+    GoalieName = $awaygoalername
+    TeamName = $VisitorTeamName
+    Saves = $awaygoalersaves
+    ShotsAgainst = $awaygoalershotsagainst
+    SavePCT = $awaygoalersvpct
+    MP = $awaygoalerminutesplayed
+    SaveNoRebound = ($gamepbp | Select-String "Stopped by $awaygoalername without a rebound").count
+    SaveWithRebound = ($gamepbp | Select-String "Stopped by $awaygoalername with a rebound").count
+    PuckRetrieved = ($gamepbp | Select-String "Puck Retrieved by $awaygoalername").count + ($gamepbp | Select-String "Puck retreived by $awaygoalername").count
+}
+
+
+
+$temphomegoalername = $homegoaler -split "\("
+$homegoalername = $temphomegoalername[0].trim()
+
+$homegoalertempstats1 = $temphomegoalername[1] -split " "
+$homegoalertempstats2 = $temphomegoalername[2] -split " "
+$homegoalersaves = $homegoalertempstats1[1]
+$homegoalershotsagainst = $homegoalertempstats1[4]
+$homegoalersvpct = $homegoalertempstats2[0].substring(0,5)
+$homegoalerminutesplayed = $homegoalertempstats2[3]
+
+$homegoaliestatobject = [PSCustomObject]@{
+    GoalieName = $homegoalername
+    TeamName = $HomeTeamName
+    Saves = $homegoalersaves
+    ShotsAgainst = $homegoalershotsagainst
+    SavePCT = $homegoalersvpct
+    MP = $homegoalerminutesplayed
+    SaveNoRebound = ($gamepbp | Select-String "Stopped by $homegoalername without a rebound").count
+    SaveWithRebound = ($gamepbp | Select-String "Stopped by $homegoalername with a rebound").count
+    PuckRetrieved = ($gamepbp | Select-String "Puck Retrieved by $homegoalername").count + ($gamepbp | Select-String "Puck retreived by $homegoalername").count
+}
+
+
 $names = @()
 $statArray = @()
 $VisitorstatArray = @()
 $HomestatArray = @()
 foreach ($line in $parseAwayTeam)
 {
-if ([string]::IsNullOrWhiteSpace($line))
-{}
-else{
- $playerStats = $line -split ' {1}(?=\d|\-\d)'
- $names += $playerStats[0].trim()
- $teamname = $VisitorTeamName
- $goals = $playerStats[1]
- $assists = $playerStats[2]
- $points = $playerStats[3]
- $plusminus = $playerStats[4]
- $PIM = $playerStats[5]
- $shots = $playerStats[6]
- $hits = $playerStats[7]
- $shotblock = $playerStats[8]
- $giveaways = $playerStats[9]
- $takeaways = $playerStats[10]
- $faceoffs = $playerStats[11]
- $MinutesPlayed = $playerStats[12]
- $PPMinutes = $playerStats[13]
- $PKMinutes = $playerStats[14]
+    if ([string]::IsNullOrWhiteSpace($line))
+    {}
+    else{
+     $playerStats = $line -split ' {1}(?=\d|\-\d)'
+     $names += $playerStats[0].trim()
+     $teamname = $VisitorTeamName
+     $goals = $playerStats[1]
+     $assists = $playerStats[2]
+     $points = $playerStats[3]
+     $plusminus = $playerStats[4]
+     $PIM = $playerStats[5]
+     $shots = $playerStats[6]
+     $hits = $playerStats[7]
+     $shotblock = $playerStats[8]
+     $giveaways = $playerStats[9]
+     $takeaways = $playerStats[10]
+     $faceoffs = $playerStats[11]
+     $MinutesPlayed = $playerStats[12]
+     $PPMinutes = $playerStats[13]
+     $PKMinutes = $playerStats[14]
 
- $statObject = [PSCustomObject]@{
- PlayerName = $playerStats[0].trim()
- TeamName = $teamname
- G = $goals
- A = $assists
- P = $points
- "+/-" = $plusminus
- PIM = $PIM
- S = $shots
- H = $hits
- SB = $shotblock
- GA = $giveaways
- TA = $takeaways
- FO = $faceoffs
- MP = $MinutesPlayed
- "PP MP" = $PPMinutes
- "PK MP" = $PKMinutes
+     $statObject = [PSCustomObject]@{
+        PlayerName = $playerStats[0].trim()
+        TeamName = $teamname
+        G = $goals
+        A = $assists
+        P = $points
+        "+/-" = $plusminus
+        PIM = $PIM
+        S = $shots
+        H = $hits
+        SB = $shotblock
+        GA = $giveaways
+        TA = $takeaways
+        FO = $faceoffs
+        MP = $MinutesPlayed
+        "PP MP" = $PPMinutes
+        "PK MP" = $PKMinutes
 
-}
-$VisitorstatArray += Add-AdvanceStats($statObject)
-}}
+        } # end $statObject custom object
+    $VisitorstatArray += Add-AdvanceStats($statObject)
+    } # end else
+} # end foreeach
 
 $parseHomeTeam = $rawHomeTeam -split ([Environment]::NewLine)
 foreach ($line in $parseHomeTeam)
@@ -514,17 +572,14 @@ Foreach ($objStat in $VisitorstatArray)
 
         
 }
-if ($vteamPassesAttempted -eq 0)
-{ $vteamnPassPct = 0}
-else{$vteamnPassPct = [math]::Round((($vteamPassesMade / $vteamPassesAttempted) * 100),0)}
+if ($vteamPassesAttempted -eq 0) { $vteamnPassPct = 0}
+else {$vteamnPassPct = [math]::Round((($vteamPassesMade / $vteamPassesAttempted) * 100),0)}
 
-if ($vteamShotsAttempted -eq 0)
-{ $vteamshotPct = 0}
-else{$vteamShotPct = [math]::Round((($vteamShotsMade / $vteamShotsAttempted) * 100),0)}
+if ($vteamShotsAttempted -eq 0) { $vteamshotPct = 0}
+else {$vteamShotPct = [math]::Round((($vteamShotsMade / $vteamShotsAttempted) * 100),0)}
 
-if ($vteamGA -eq 0)
-{ $vteamGAPct = 0}
-else{ $vteamGAPct = [math]::Round((($vteamGA / ($vteamLPPickup + $vteamRPass + $vteamPassINT)) * 100),0)}
+if ($vteamGA -eq 0) { $vteamGAPct = 0}
+else { $vteamGAPct = [math]::Round((($vteamGA / ($vteamLPPickup + $vteamRPass + $vteamPassINT)) * 100),0)}
 
 $vteamtotals = [PSCustomObject]@{
  PlayerName = "Team Totals"
@@ -568,7 +623,7 @@ $vteamtotals = [PSCustomObject]@{
 $VisitorstatArray += $vteamtotals
 
 $VisitorstatArray |ft PlayerName,TeamName,G,A,P,"+/-",PIM,S,H,SB,GA,TA,"GA/TA","GA%",FO,MP,"PP MP","PK MP",HitLP,PassINT,LPPickup,RPass,DumpIns,Icings,LPfromHit,LostPuck,Passes,PassPct,SDelfect,SMiss,SBlock,SHitPost,Shots,SOGPct -autosize
-
+$awaygoaliestatobject |ft -AutoSize
 
 #build out home team totals
 $hteamgoals = 0
@@ -694,7 +749,7 @@ $hteamtotals = [PSCustomObject]@{
 $HomestatArray += $hteamtotals
 
 $HomestatArray |ft PlayerName,TeamName,G,A,P,"+/-",PIM,S,H,SB,GA,TA,"GA/TA","GA%",FO,MP,"PP MP","PK MP",HitLP,PassINT,LPPickup,RPass,DumpIns,Icings,LPfromHit,LostPuck,Passes,PassPct,SDelfect,SMiss,SBlock,SHitPost,Shots,SOGPct -autosize
-
+$homegoaliestatobject |ft -AutoSize
 
 # Create Corsi numbers - 
 # 
